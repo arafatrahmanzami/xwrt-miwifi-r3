@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.config.seed'
+      - 'xwrt.config'
       - '**/Makefile'
       - '**/*.apk'
       - '.github/workflows/build.yml'
@@ -79,9 +79,6 @@ jobs:
           src-git-full routing https://github.com/x-wrt/routing.git
           src-git-full telephony https://github.com/x-wrt/telephony.git
           src-git-full video https://github.com/x-wrt/video.git
-          #src-git-full targets https://github.com/openwrt/targets.git
-          #src-git-full oldpackages http://git.openwrt.org/packages.git
-          #src-link custom /usr/src/openwrt/custom-feed
           src-git-full x https://github.com/x-wrt/com.x-wrt.git
           src-git routing_upstream https://git.openwrt.org/feed/routing.git;openwrt-25.12
           src-git packages_upstream https://git.openwrt.org/feed/packages.git;master
@@ -109,7 +106,7 @@ jobs:
       - name: Restore config and resolve
         run: |
           cd openwrt
-          cp ../.config.seed .config
+          cp ../xwrt.config .config
           make defconfig
           echo "=y: $(grep -cE '^CONFIG_PACKAGE_[a-z0-9_-]+=y' .config)"
           echo "=m: $(grep -cE '^CONFIG_PACKAGE_[a-z0-9_-]+=m' .config)"
