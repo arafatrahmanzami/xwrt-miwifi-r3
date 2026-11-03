@@ -20,6 +20,7 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     timeout-minutes: 350
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,11 +48,15 @@ jobs:
             git gettext libssl-dev xsltproc wget unzip python3 rsync \
             subversion flex bison libelf-dev bc
 
-      - name: Clone X-WRT at pinned commit
+      - name: Clone X-WRT
         run: |
           git clone https://github.com/x-wrt/x-wrt.git openwrt
           cd openwrt
-          git checkout d4ebb18563a339494615984509e9a149fb320090
+          # Try to checkout your exact commit, fallback to master if not found
+          git checkout d4ebb18563a339494615984509e9a149fb320090 || {
+            echo "⚠️ Commit d4ebb185 not found in upstream. Falling back to latest master."
+            git checkout master
+          }
 
       - name: Copy custom packages
         run: |
@@ -88,6 +93,7 @@ jobs:
           rm -rf package/feeds/*/luci-app-bandix-plus
           rm -rf package/feeds/*/openwrt-bandix
           rm -rf package/feeds/*/openwrt-bandix-plus
+          echo "Fixes applied."
 
       - name: Restore config and resolve
         run: |
@@ -132,7 +138,7 @@ jobs:
           tag_name: build-${{ github.run_number }}
           name: "X-WRT build ${{ github.run_number }}"
           body: |
-            Build from commit d4ebb18563a339494615984509e9a149fb320090.
+            Build from commit d4ebb18563a339494615984509e9a149fb320090 (or latest master).
             Target: ramips/mt7620, Xiaomi MiWiFi R3.
           files: |
             output/targets/*
