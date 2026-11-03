@@ -9,6 +9,7 @@ on:
       - 'feeds.conf.default'
       - '**/Makefile'
       - '**/*.apk'
+      - '.github/workflows/build.yml'
 
 permissions:
   contents: write
@@ -52,7 +53,6 @@ jobs:
         run: |
           git clone https://github.com/x-wrt/x-wrt.git openwrt
           cd openwrt
-          # Try to checkout your exact commit, fallback to master if not found
           git checkout d4ebb18563a339494615984509e9a149fb320090 || {
             echo "⚠️ Commit d4ebb185 not found in upstream. Falling back to latest master."
             git checkout master
