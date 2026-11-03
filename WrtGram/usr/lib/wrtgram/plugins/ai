@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""
+ai.py – AI Assistant plugin for WrtGram.
+Calls OpenRouter and allows direct router management via [EXEC: command] tags.
+"""
+
+import sys
+import os
+
+# Allow importing wrtgramlib from its installed location
+sys.path.insert(0, "/usr/lib/wrtgram")
+
+import json
+import urllib.request
+import urllib.error
+import logging
+from wrtgramlib import get_config, get_plugins_context, subprocess_cmd
+
+# Simple logging for the plugin
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("ai_plugin")
+
+def ask_ai(prompt):
+    cfg = get_config()
+    provider = cfg.get("ai_provider", "openrouter").lower()
+
+    # Gather system context
+    plugins_context = get_plugins_context()
+    system_status = subprocess_cmd(["uptime"])
+    
+    system_instruction = (
+        "You are a specialized AI assistant for an OpenWrt router named WrtGram. "
+        "You have full root access to the system. "
+        "You can execute any shell command or use existing WrtGram plugins. "
+        "\n\n" + plugins_context + "\n\n"
+        "Current System Uptime: " + system_status + "\n\n"
+        "INSTRUCTIONS:\n"
+        "1. To execute a command (native or plugin), use: [EXEC: command_here].\n"
+        "2. To CREATE A NEW PERMANENT PLUGIN, use the following block:\n"
+        "   [CREATE_PLUGIN: name]\n"
+        "   #!/bin/sh\n"
+        "   # code here\n"
+        "   [/CREATE_PLUGIN]\n"
+        "3. Every new plugin MUST have a help file using this block:\n"
+        "   [CREATE_HELP: name] Short description of what it does [/CREATE_HELP]\n"
+        "4. You can create a plugin and then immediately execute it in the same response.\n"
+        "5. Be concise. Explain your actions clearly.\n"
+    )
+
+    if provider == "gemini":
+        gemini_key = cfg.get("gemini_key")
+        gemini_model = cfg.get("gemini_model", "gemini-3-flash-preview")
+
+        if not gemini_key or "[PUT YOUR GEMINI API KEY HERE]" in gemini_key:
+            return "❌ Gemini API key not configured in UCI (wrtgram.global.gemini_key)."
+
+        try:
+            from google import genai
+            client = genai.Client(api_key=gemini_key)
+            response = client.models.generate_content(
+                model=gemini_model,
+                contents=prompt,
+                config={"system_instruction": system_instruction}
+            )
+            return response.text
+        except ImportError:
+            return "❌ Missing 'google-genai' library. Please install it (e.g. `pip install google-genai`)."
+        except Exception as e:
+            return f"❌ Gemini API Error: {str(e)}"
+
+    # Default to OpenRouter
+    api_key = cfg.get("openrouter_key")
+    model = cfg.get("openrouter_model")
+
+    if not api_key or "[PUT YOUR OPENROUTER API KEY HERE]" in api_key:
+        return "❌ OpenRouter API key not configured in UCI (wrtgram.global.openrouter_key)."
+
+    data = json.dumps({
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system_instruction},
+            {"role": "user", "content": prompt}
+        ]
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=data,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://github.com/nhAsif/WrtGram",
+            "X-Title": "WrtGram Bot",
+        }
+    )
+
+    try:
+        with urllib.request.urlopen(req) as response:
+            res = json.loads(response.read().decode())
+            if 'choices' in res and len(res['choices']) > 0:
+                return res['choices'][0]['message']['content']
+            else:
+                return f"❌ Unexpected response from OpenRouter: {json.dumps(res)}"
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode()
+        try:
+            error_json = json.loads(error_body)
+            error_msg = error_json.get("error", {}).get("message", error_body)
+        except:
+            error_msg = error_body
+        return f"❌ OpenRouter API Error ({e.code}): {error_msg}"
+    except Exception as e:
+        return f"❌ AI Error: {str(e)}"
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("🤖 *I am your AI assistant.*\nUsage: `/ai <your question or command>`")
+    else:
+        user_prompt = " ".join(sys.argv[1:])
+        print(ask_ai(user_prompt))

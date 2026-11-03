@@ -1,0 +1,142 @@
+name: Build X-WRT Firmware
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.config.seed'
+      - 'feeds.conf.default'
+      - '**/Makefile'
+      - '**/*.apk'
+
+permissions:
+  contents: write
+
+env:
+  TZ: UTC
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 350
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 4096
+          temp-reserve-mb: 1024
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
+
+      - name: Show disk space
+        run: df -h /
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses5-dev zlib1g-dev gawk \
+            git gettext libssl-dev xsltproc wget unzip python3 rsync \
+            subversion flex bison libelf-dev bc
+
+      - name: Clone X-WRT at pinned commit
+        run: |
+          git clone https://github.com/x-wrt/x-wrt.git openwrt
+          cd openwrt
+          git checkout d4ebb18563a339494615984509e9a149fb320090
+
+      - name: Copy custom packages
+        run: |
+          for pkg in luci-app-internet-detector luci-app-cpu-status-mini luci-theme-argon \
+                     luci-app-argon-config luci-app-pppoe-manager luci-app-access-shield \
+                     luci-app-quickactions luci-app-ports-status-mod luci-theme-matrix \
+                     luci-theme-material3 luci-app-notes luci-app-linkspeed \
+                     luci-app-dashboard luci-app-trafficctl luci-app-easymesh \
+                     WrtGram openlink-portal luci-app-client-monitor-prebuilt \
+                     luci-app-easy-setup-prebuilt; do
+            if [ -d "$pkg" ]; then
+              cp -r "$pkg" openwrt/package/
+            fi
+          done
+
+      - name: Apply custom feeds
+        run: |
+          cp feeds.conf.default openwrt/
+          cd openwrt
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Apply build fixes
+        run: |
+          cd openwrt
+          set -e
+          sed -i '/^LUCI_NAME?=/i PKG_VERSION?=25.12' feeds/luci/luci.mk
+          rm -rf package/feeds/packages_upstream/fwknop
+          rm -rf package/feeds/packages_upstream/squeezelite
+          rm -rf package/feeds/luci/luci-app-fwknopd
+          rm -rf package/feeds/*/luci-app-easymesh/meta-packages
+          rm -f package/feeds/x/luci-theme-argon
+          rm -rf package/feeds/*/luci-app-bandix
+          rm -rf package/feeds/*/luci-app-bandix-plus
+          rm -rf package/feeds/*/openwrt-bandix
+          rm -rf package/feeds/*/openwrt-bandix-plus
+
+      - name: Restore config and resolve
+        run: |
+          cd openwrt
+          cp ../.config.seed .config
+          make defconfig
+          echo "=y: $(grep -cE '^CONFIG_PACKAGE_[a-z0-9_-]+=y' .config)"
+          echo "=m: $(grep -cE '^CONFIG_PACKAGE_[a-z0-9_-]+=m' .config)"
+
+      - name: Download sources
+        run: |
+          cd openwrt
+          make download -j4
+
+      - name: Build firmware and packages
+        run: |
+          cd openwrt
+          make -j4 V=s IGNORE_ERRORS=m 2>&1 | tee build.log
+
+      - name: Extract failed packages
+        if: always()
+        run: |
+          cd openwrt
+          grep -aE 'ERROR: package/[a-z0-9_/-]+ failed to build' build.log \
+            | sort -u || echo "None"
+
+      - name: Package outputs
+        if: always()
+        run: |
+          mkdir -p output
+          if [ -d openwrt/bin/targets/ramips/mt7620 ]; then
+            cp -r openwrt/bin/targets/ramips/mt7620/ output/targets/
+          fi
+          if [ -d openwrt/bin/packages/mipsel_24kc ]; then
+            tar -czf output/packages.tar.gz -C openwrt/bin/packages/mipsel_24kc .
+          fi
+
+      - name: Upload to Release
+        if: always() && hashFiles('output/targets/*') != ''
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "X-WRT build ${{ github.run_number }}"
+          body: |
+            Build from commit d4ebb18563a339494615984509e9a149fb320090.
+            Target: ramips/mt7620, Xiaomi MiWiFi R3.
+          files: |
+            output/targets/*
+            output/packages.tar.gz
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

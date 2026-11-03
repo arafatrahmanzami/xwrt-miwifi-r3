@@ -1,0 +1,137 @@
+/**
+ * luci-theme-matrix: design tokens -- GENERATED, DO NOT EDIT.
+ * Run `pnpm gen:tokens`. Source: tokens/spec.js + tokens/defaults.js
+ * All color values are flat; lightningcss adds legacy fallbacks.
+ * ORDER MATTERS: [data-darkmode="true"] must stay after :root.
+ */
+
+:root {
+  --bg: #020B1A;
+  --surface: #071726;
+  --text: #00EAFF;
+  --brand: #00EAFF;
+  --on-brand: #000000;
+  --link: #00EAFF;
+  --info: #00EAFF;
+  --warning: #FFC857;
+  --success: #00FF41;
+  --danger: #FF005D;
+  --text-muted: oklch(58.72% 0.1008 212.3);
+  --text-subtle: oklch(48.82% 0.0844 216.1);
+  --surface-sunken: oklch(13.87% 0.0371 254.5);
+  --surface-overlay: oklch(16.47% 0.0371 254.5);
+  --hairline: oklch(85.59% 0.1465 206.3 / 0.08);
+  --hover-faint: oklch(10.87% 0.0371 254.5);
+  --brand-hover: oklch(79.59% 0.1465 206.3);
+  --brand-subtle: oklch(23.36% 0.0463 238.1);
+  --brand-subtle-hover: oklch(19.36% 0.0463 238.1);
+  --focus-ring: oklch(85.59% 0.1465 206.3 / 0.6);
+  --progress-start: oklch(60.49% 0.1044 211.7);
+  --progress-end: #00EAFF;
+  --info-surface: oklch(94% 0.05 206.3);
+  --warning-surface: oklch(95% 0.05 82.66);
+  --success-surface: oklch(94% 0.05 144.5);
+  --danger-surface: oklch(94% 0.05 13.18);
+  --danger-surface-hover: oklch(90% 0.05 13.18);
+  --scrim: oklch(0% 0 0 / 0.6);
+  --mega-menu-bg: oklch(16.47% 0.0371 254.5);
+  --mega-menu-scrim: oklch(0% 0 0 / 0.32);
+  --app-shadow-sm: none;
+  --app-shadow-md: none;
+  --app-shadow-lg: none;
+
+  --font-sans: "JetBrains Mono", "Fira Code", "VT323", ui-monospace, monospace;
+  --font-mono: "JetBrains Mono", "Fira Code", "VT323", ui-monospace, monospace;
+  --spacing: 0.25rem;
+  --container-max-width: 80rem;
+  --radius-base: 0rem;
+}
+
+[data-darkmode="true"] {
+  --bg: #020B1A;
+  --surface: #071726;
+  --text: #00EAFF;
+  --brand: #00EAFF;
+  --on-brand: #000000;
+  --link: #00EAFF;
+  --info: #00EAFF;
+  --warning: #FFC857;
+  --success: #00FF41;
+  --danger: #FF005D;
+  --text-muted: oklch(58.72% 0.1008 212.3);
+  --text-subtle: oklch(44.57% 0.0776 218.3);
+  --surface-sunken: oklch(15.43% 0.0375 248.4);
+  --surface-overlay: oklch(21.93% 0.0375 248.4);
+  --hairline: oklch(85.59% 0.1465 206.3 / 0.1);
+  --hover-faint: oklch(85.59% 0.1465 206.3 / 0.05);
+  --brand-hover: oklch(80.59% 0.1465 206.3);
+  --brand-subtle: oklch(26.19% 0.0499 234);
+  --brand-subtle-hover: oklch(30.19% 0.0499 234);
+  --focus-ring: oklch(85.59% 0.1465 206.3 / 0.6);
+  --progress-start: oklch(61.04% 0.1054 211.1);
+  --progress-end: #00EAFF;
+  --info-surface: oklch(32% 0.05 206.3);
+  --warning-surface: oklch(33% 0.06 82.66);
+  --success-surface: oklch(30% 0.05 144.5);
+  --danger-surface: oklch(32% 0.08 13.18);
+  --danger-surface-hover: oklch(36% 0.08 13.18);
+  --scrim: oklch(0% 0 0 / 0.6);
+  --mega-menu-bg: oklch(15.43% 0.0375 248.4);
+  --mega-menu-scrim: oklch(0% 0 0 / 0.5);
+  --app-shadow-sm: none;
+  --app-shadow-md: none;
+  --app-shadow-lg: none;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-brand: var(--brand);
+  --color-on-brand: var(--on-brand);
+  --color-link: var(--link);
+  --color-info: var(--info);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-hairline: var(--hairline);
+  --color-hover-faint: var(--hover-faint);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-brand-subtle-hover: var(--brand-subtle-hover);
+  --color-focus-ring: var(--focus-ring);
+  --color-progress-start: var(--progress-start);
+  --color-progress-end: var(--progress-end);
+  --color-info-surface: var(--info-surface);
+  --color-warning-surface: var(--warning-surface);
+  --color-success-surface: var(--success-surface);
+  --color-danger-surface: var(--danger-surface);
+  --color-danger-surface-hover: var(--danger-surface-hover);
+  --color-scrim: var(--scrim);
+  --color-mega-menu-bg: var(--mega-menu-bg);
+  --color-mega-menu-scrim: var(--mega-menu-scrim);
+
+  --shadow-sm: var(--app-shadow-sm);
+  --shadow-md: var(--app-shadow-md);
+  --shadow-lg: var(--app-shadow-md);
+  --shadow-xl: var(--app-shadow-lg);
+  --shadow-2xl: var(--app-shadow-lg);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --spacing: var(--spacing);
+  --container-max-width: var(--container-max-width);
+
+  --radius-sm: calc(var(--radius-base) * 0.25);
+  --radius: calc(var(--radius-base) * 0.5);
+  --radius-md: calc(var(--radius-base) * 0.75);
+  --radius-lg: var(--radius-base);
+  --radius-xl: calc(var(--radius-base) * 1.5);
+  --radius-2xl: calc(var(--radius-base) * 2);
+  --radius-3xl: calc(var(--radius-base) * 3);
+  --radius-4xl: calc(var(--radius-base) * 4);
+}

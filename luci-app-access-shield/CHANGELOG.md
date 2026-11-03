@@ -1,0 +1,414 @@
+# Changelog
+
+All notable changes to Access Shield are documented here.
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.0-r10] — 2026-10-19
+
+### Fixed
+
+**LuCI 26.073 (OpenWrt SNAPSHOT) — Setup Wizard and Status page `unknown step:` error**
+- Two bugs stacked: (1) `do_setup_apply` called `json_init` before reading
+  its case-handler variables, wiping the parsed payload. (2) LuCI
+  26.073's minifier + rpc layer silently dropped object arguments to
+  `rpc.declare({...})` calls, so the backend received only
+  `{ubus_rpc_session}` and no step name.
+- Fix: all `json_get_var` reads moved before `json_init` in
+  `do_setup_apply`. Client-side, `setup.js` and `status.js` now declare
+  `params: ['data']` and pass `JSON.stringify({...})` — a single string
+  survives LuCI 26.073's argument stripping. Backend parses `data` via
+  `grep -o` and falls back to `json_get_var` for backwards compat.
+
+**Dashboard — Edit modal pre-fill and Interface dropdown**
+- Edit previously pre-filled from live device state instead of the
+  binding target, and the dropdown was hardcoded to br-lan / br-lan2 /
+  br-lan3.
+- Fix: Edit pre-fills from `bound_name` / `bound_ipv4` / `bound_iface`
+  with live fallback. All three modals (Edit, Bind, Add) build their
+  Interface dropdown from `list_bridges`.
+
+**Dashboard — Duplicate MAC guard bypassable**
+- Add modal used the cached `bindingByMac` snapshot. If a MAC was bound
+  by another path (CLI, admin safeguard, another tab) after page load,
+  the guard missed and `do_bind_device` silently overwrote via `uci set`.
+- Fix: rpcd `do_bind_device` now refuses duplicates (`{ok:false,
+  error:"MAC already bound in section X"}`). JS Add modal checks live
+  `callListBindings()` before submitting.
+
+**Dashboard — bind failures were silent**
+- The Add/Bind/Edit call chains did not check `res.ok`. When the backend
+  refused, the UI showed "Device added." anyway.
+- Fix: all three now inspect `res.ok` and show red `Failed: <error>` on
+  refusal.
+
+**Dashboard and Traffic — auto-refresh dropdown did not persist**
+- `uci.set()` + `uci.commit()` from a view handler does not work in
+  LuCI 26.073 (`uci.commit is not a function`; the global staging badge
+  also appeared).
+- Fix: new rpcd method `set_setting(key, value)` writes UCI server-side
+  and commits. The dropdown change handler calls it via RPC. No staging
+  badge, no `Save & Apply` needed, value persists across reloads.
+
+### Added
+
+**Dashboard — Smart Live → Bound display**
+- When a device is bound to one bridge but live on another, both are
+  shown: `br-lan → br-lan2` in grey → blue, same for IP.
+
+**Dashboard — Bridge filter dropdown**
+- Filters devices by live or bound interface.
+
+**Dashboard — Refresh button**
+- Dedicated `↻ Refresh` button next to the auto-refresh dropdown.
+
+**Dashboard — Local 1-second ticket ticker**
+- The `🎫 30m 12s` countdown now decrements every second in the browser.
+  The dashboard poll interval is unaffected — the ticker is local DOM
+  only, no extra RPC.
+
+**Interfaces tab — Orphaned sections table** (from r7, retained)
+- Already shipped in r7; unchanged.
+
+**rpcd — `set_setting` method**
+- Generic key/value setter for `access_shield.settings.*`. Used by the
+  Dashboard and Traffic auto-refresh dropdowns to save without staging.
+  Refuses if `key` is empty.
+
+### Notes
+
+**Ticket persistence across reboot / load-shedding — already correct**
+- Tickets are stored in UCI (`/etc/config/access_shield`, persistent
+  flash) with an absolute `expires_at` Unix timestamp. The `ticketd`
+  daemon compares `date +%s` against `expires_at` every 10 seconds. On
+  reboot, `/etc/config/access_shield` is loaded from flash and the first
+  tick after NTP sync correctly deletes any expired ticket. No code
+  changes needed for this — it has always been the case.
+
+**Tested on**
+- ImmortalWrt 24.10.6 (opkg) — pending regression test
+- OpenWrt 25.12.5 (apk) — pending regression test
+- OpenWrt SNAPSHOT r33269 mipsel_24kc (apk, Mi R3) — full r10 validation
+
+## [1.0.0-r9] — 2026-10-09
+
+### Fixed
+
+**Dashboard & Traffic — poll stacking caused XHR timeouts and CPU spikes**
+- Initial r9a/r9b patches replaced LuCI's `poll.add` with `setInterval`,
+  which schedules independently of completion. On a busy router the
+  refresh call (which spawns subprocesses + multiple `uci get` calls)
+  took longer than the interval, so every tick stacked on top of the
+  previous one and saturated rpcd. Dashboard became unusable.
+- Replaced both with a sequential `setTimeout` scheduler: each tick
+  waits for `refresh()` to resolve before scheduling the next. This is
+  what LuCI's `poll.add` did implicitly; `setInterval` does not.
+- Both views also added a `view.unload` hook to clear the timer on
+  navigation.
+
+**Traffic — auto-refresh dropdown did nothing**
+- The dropdown's `change` handler updated a local variable that the
+  already-registered LuCI poll never re-read. Replaced with a
+  scheduler that clears and re-creates on change.
+
+**`list_devices` — 4+ second RPC stall**
+- `do_list_devices` called `/usr/bin/access-shield-discover` on every
+  invocation. That script forks awk / grep / iw / ip / uci per device —
+  ~4.3 seconds on a 25-device router — and blocked the entire Dashboard
+  `Promise.all`. Added a `/tmp` TTL cache; TTL = `2 × scan_interval`
+  with a 45s floor (so with the default `scan_interval=30`, TTL is 60s).
+  Doubling ensures a client polling at the `scan_interval` cadence
+  always hits a warm cache instead of racing its expiry on every
+  cycle — the difference between one discover burst per minute and
+  one per 30 seconds. Repeat calls within the window are a plain `cat`:
+  ~0.03s.
+
+### Changed
+
+**Traffic — Per-Subnet limits now have one Save All button**
+- Removed the per-row Save button. A single **Save All Changes** button
+  below the table commits every row in one pass — change multiple
+  bridges, click once, one page reload.
+- Traffic's "Sample: N s" label relabeled to "Backend sample: N s" to
+  clarify it is the conntrack sampling rate, not the poll interval.
+
+### Added
+
+**Settings — three new global options**
+- `dashboard_interval` — Dashboard auto-refresh interval (default 15,
+  0 disables).
+- `traffic_interval` — Traffic auto-refresh interval (default 2,
+  0 disables).
+- `firewall_write` — permission flag (default OFF).
+
+**Dashboard — configurable auto-refresh**
+- Live override dropdown in the header. Reads the Settings default on
+  load; changes take effect immediately without saving.
+- Options: 5/10/15/30/60/120s and Off.
+
+**Traffic — configurable auto-refresh**
+- Live override dropdown in the header. Reads the Settings default on
+  load.
+- Options: 0/1/2/5/10/30/60s plus the configured value.
+
+**Wireless — per-SSID MAC detail modal**
+- Click an SSID name in the per-SSID filtering status table to open a
+  modal listing every MAC currently allowed on that SSID, with per-MAC
+  Remove and an Add MAC input. Uses existing `set_mac_filter` RPC.
+
+**Setup wizard — optional firewall write (default OFF)**
+- New `firewall_write` flag, default `0`.
+- When OFF: the Setup wizard's step-4 button becomes "How to fix
+  manually" and opens a modal with instructions for Network -> Firewall.
+  The app's promise to never touch `/etc/config/firewall` is preserved.
+- When ON: the button writes the missing allow rules into
+  `/etc/config/firewall`, snapshots the config first, reloads fw4, and
+  restores the snapshot if fw4 fails to come up.
+- Closes the investigation into the previously-dead `ensure_zone_rules`
+  button — the rpcd case it referenced never existed.
+
+
+## [1.0.0-r8] — 2026-10-09
+
+### Fixed
+
+**Settings tab — Save & Apply**
+- `handleSaveApply` was missing `ui.changes.apply()`. Clicking Save &
+  Apply staged the changes in the browser but never committed to UCI,
+  so the "UNSAVED CHANGES" badge persisted and the only way to commit
+  was to open the diff panel and click Save & Apply a second time.
+  Same class of bug as the r4 Interfaces-tab fix, in a view that
+  hadn't been checked at the time.
+
+**Traffic tab — Per-Subnet Bandwidth Limits input vanished**
+- The 2-second poll calls `repaint()`, which wiped the entire page
+  container and rebuilt it, including the subnet limit inputs. The
+  rebuilt inputs read from the last RPC response, not from what the
+  user had typed — so any character entered was lost within 1–2
+  seconds.
+- Fix: split the render into a `liveContainer` (device table, rebuilt
+  every poll) and static content (top bar + subnet config section,
+  built once and never touched by the poll). User typing in the
+  subnet inputs now survives, and the Save button still triggers a
+  page reload after the RPC commits.
+
+### Added
+
+**Wireless tab — per-SSID filtering status table**
+- New "Per-SSID filtering status" summary table above the checkbox
+  list. Shows for each AP-mode SSID: radio, SSID name, whether hostapd
+  MAC filter is `allow` or `disable`, and the current MAC list (up to
+  3 shown, `+N more` suffix beyond that).
+- The data was already returned by the `wifi_interfaces` RPC; the view
+  simply wasn't displaying it.
+
+## [1.0.0-r7] — 2026-10-07
+
+### Added
+
+**Interfaces tab — orphan detection + cleanup**
+- The Interfaces tab now compares each `access_shield.*=interface` UCI
+  section against the kernel interface list. Sections whose `device`
+  no longer exists in `/sys/class/net/` are flagged as orphans and
+  shown in a dedicated warning table above the other tables, each with
+  a **Remove** button and confirmation modal.
+- Enforcement already skipped orphans safely via the `iface_exists`
+  guard in `apply_interface()`, but the UI gave no visibility.
+
+**Interfaces tab — "+ Add Interface by Name"**
+- Manual add button for bridges that auto-discovery cannot see,
+  primarily pre-provisioning a `br-*` name that does not yet exist in
+  the kernel. Accepts any existing bridge or a `br-*` name; rejects
+  everything else.
+- Adopted sections still default to mode `disabled`, `enabled` `0`, so
+  a mis-typed name cannot lock anyone out.
+- If a section's device does not yet exist in the kernel, the new
+  orphan-detection table flags it — the user sees the honest state.
+
+**rpcd — `remove_interface` method**
+- New `do_remove_interface` RPC: refuses to delete any section whose
+  interface still exists in the kernel. Only true orphans can be
+  removed. Hard safety guard, not a UI check — even a direct ubus
+  call cannot remove a healthy bridge.
+
+**rpcd — `add_bridge` relaxed for pre-provisioning**
+- Previously rejected any name without a `/sys/class/net/<iface>/bridge`
+  entry. Now also accepts `br-*` names for pre-provisioning. Non-bridge,
+  non-`br-*` names are still refused.
+
+## [1.0.0-r6] — 2026-10-07
+
+### Added
+
+**Interfaces tab — auto-discovery of new kernel bridges**
+- The Interfaces tab now calls the existing `list_bridges` RPC and
+  renders an "Unmanaged bridges" table above the managed-bridge editor.
+  Each kernel bridge not yet tracked in UCI gets a row with its subnet,
+  operstate, an inline label input, and an **Adopt** button.
+- Adopting a bridge creates a new `access_shield.<name>=interface`
+  section with mode `disabled`, `enabled` `0`, `dhcp_allow` `1`, and
+  `default_drop` `1`. Enforcement stays OFF until the user explicitly
+  turns it on, so a freshly adopted bridge cannot lock anyone out.
+- The Unmanaged-bridges table hides itself when every kernel bridge is
+  already managed, so the UI is unchanged for existing setups.
+
+**rpcd — `add_bridge` method**
+- New `do_add_bridge` RPC: validates the target is a real kernel bridge
+  (`/sys/class/net/<iface>/bridge` exists), refuses if already managed,
+  generates a unique UCI section name, writes the new interface section,
+  commits, and reloads the enforcement service.
+
+## [1.0.0-r5] — 2026-10-07
+
+### Added
+
+**Dashboard — manual "Add Device by MAC"**
+- New button at the top of the Dashboard opens a modal to bind a device
+  by MAC, IP, interface, and name, without the device needing to appear
+  in the discovery list first.
+- Essential on strictly-enforced bridges (`reply_only` + `default_drop=1`),
+  where unbound devices are dropped at prerouting before they can DHCP,
+  so they never appear in `list_devices`. Previously the only way to add
+  such a device was to SSH in and edit UCI by hand.
+- Refuses MACs that are already bound (`do_bind_device` would otherwise
+  reset `block_internet` to 0 and silently unblock the device).
+- Validates MAC (`aa:bb:cc:dd:ee:ff`) and IPv4 formats client-side.
+
+### Fixed
+
+**Dashboard — search input lost focus after each keystroke (pre-existing)**
+- Typing in the search box called `repaint()`, which rebuilt the entire
+  view and replaced the input DOM node. The browser cannot preserve focus
+  across a node swap, so users had to click the box again before every
+  subsequent character. Focus and cursor position are now saved before
+  `repaint()` and restored after the new tree is attached.
+
+**Dashboard — dead click on empty-state row (pre-existing)**
+- The "No devices match the current filter" row had a click handler that
+  referenced `d.mac`, but `d` was scoped to the preceding `forEach` loop
+  and did not exist in the empty-state block. Clicking the row threw
+  `ReferenceError: d is not defined` inside the event handler and did
+  nothing visible to the user. Handler removed; row is now static.
+- More visible in r5 because the new Add Device workflow makes the empty
+  state a routinely-hit path.
+
+**Menu — Network → Access Shield landed on Setup instead of Dashboard**
+- The parent menu entry uses `action: { type: "firstchild" }`, so the
+  landing page is whichever child has the lowest `order` value. Setup
+  was `order: 5`, Dashboard was `order: 10` — users landed on Setup.
+  Dashboard's order is now `1`, so `firstchild` resolves to Dashboard.
+
+## [1.0.0-r4] — 2026-10-07
+
+### Fixed
+
+**Interfaces tab — Save & Apply**
+- `handleSaveApply` now calls `ui.changes.apply()` — the commit step was
+  missing. Save & Apply previously staged changes in the browser, called
+  the sync RPC to reload services, showed a success notification, but
+  never wrote to UCI. The "unsaved changes" badge persisted after every
+  save.
+
+**Per-bridge enforcement toggles**
+- `dhcp_allow` — now read in `apply_interface()`. When `0`, the DHCP
+  accept rule (`udp dport 67`) is not emitted on that bridge's shield
+  chain. Devices on this bridge cannot reach dnsmasq to obtain a lease.
+- `default_drop` — now read in `apply_interface()`. When `0`, the final
+  `meta nfproto ipv4 drop` rule is not emitted. The chain's `policy
+  accept` takes over and non-whitelisted IPv4 continues to the forward
+  hook.
+- Both fields default to `1` when missing — preserves prior behavior for
+  existing configurations. Only bridges with an explicit `0` change
+  behavior.
+
+### Added
+
+**Layered enforcement documentation** — Help tab and README now describe
+how the two toggles combine with the firewall zone forward policy and
+dnsmasq's dynamic DHCP setting.
+
+### Notes
+
+Both toggles have been present in the UI since v1.0.0 but were never read
+by the init script. On routers where fw4's zone forward policy is REJECT
+(the OpenWrt default) and dnsmasq has `dynamicdhcp=0`, the observable
+effect is masked by those layers — see Help tab for the decision matrix.
+
+## [1.0.0] — 2026-10-06
+
+### Added
+
+**Core enforcement**
+- Prerouting nftables packet filter (`inet access_shield_fw`) with per-bridge MAC+IP whitelist
+- Per-bridge ARP mode: `disabled` / `loose` / `reply_only`
+- Static-only DHCP mirroring (`allocated_by=access_shield`)
+- Rogue DHCP shield (DHCP accept rule per protected bridge)
+- Admin self-safeguard — auto-binds current SSH/LuCI session before rule apply
+
+**Device management**
+- Unified device discovery (DHCP + ARP + IPv6 neighbor + WiFi association)
+- Dashboard with per-row Edit / Block / Allow / Bind / Unbind / Rename / Issue Ticket
+- Friendly device aliases override DHCP hostnames
+- Search + 4 filters (bound, state, link, access)
+
+**Traffic control**
+- Per-device rate limits — nftables `limit rate over` with Mbps/MBps/Kbps/KBps units
+- Per-subnet aggregate bandwidth limits (auto-detects bridges)
+- Live traffic monitor with per-device upload/download rates (conntrack)
+- Speed limit column on Traffic tab
+
+**Temporary access**
+- Ticket system — grant time-limited access to blocked devices
+- 10-second expiry daemon with auto-revocation
+- Ticket accept rules run before block drops (nftables priority 1 vs 5)
+- Ticket badge with live countdown on Dashboard
+
+**Wireless**
+- Per-SSID MAC filter management (hostapd `macfilter`/`maclist`)
+- Device dropdown + custom MAC input
+- WiFi reload on apply
+
+**Firewall**
+- Per-device internet block toggle
+- Firewall zone reference table (read-only)
+- Chain ordering documentation
+
+**Setup & docs**
+- 7-step setup wizard with progress bar
+- Status dashboard (6 environment checks at a glance)
+- Help tab with full documentation
+- Migration tool from `luci-app-arpbind`
+
+### Architecture
+
+- 5 isolated nftables tables: `fw`, `block`, `shape`, `subnet`, `ticket`
+- Each service has its own procd init script
+- Priority chain: ticket(1) → block(5) → shape(10) → subnet(15)
+- Auto-rollback on dnsmasq failure (snapshot/restore DHCP)
+- Never modifies user's firewall (fw4) config
+
+### Compatibility
+
+- OpenWrt 23.05+ / 24.10+
+- ImmortalWrt 23.05+ / 24.10+
+- opkg and apk
+- All architectures (`LUCI_PKGARCH := all`)
+
+### Tested on
+
+- Imou LC-HX3001 (mediatek/filogic, aarch64, ImmortalWrt 24.10.6)
+
+### Known limitations
+
+- IPv6 whitelist enforcement: planned for v1.1 (currently filters IPv4 only)
+- Bandwidth monitor accuracy depends on flow offloading state (detected, not auto-changed)
+- Wireless MAC filter requires `hostapd`-managed AP-mode interfaces
+
+### Migrated from `luci-app-arpbind`
+
+The v1.0.0 release includes a one-shot migration tool:
+- Reads all 21 legacy arpbind bindings
+- Imports them into `access_shield` config as `binding` sections
+- Preserves per-device names, IPs, MACs, and iface assignments
+- Deletes legacy `dhcp.lan2_arpbind_*` entries
+- Preserves old `arp_rosd` UCI config as fallback

@@ -1,0 +1,886 @@
+# Changelog
+
+All notable changes to luci-app-trafficctl since v1.0.0.
+
+---
+
+## [1.25.0] - 2026-10-23
+
+### Features
+- per-interface totals per period (backend) ([#104](https://github.com/YusDyr/luci-app-trafficctl/issues/104)) ([5f73c9b](https://github.com/YusDyr/luci-app-trafficctl/commit/5f73c9b40e5944802397132c23ff61af80af69c3))
+  Refs #102, asked for by @the-e3n in #90 for multi-WAN setups.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.24.0...v1.25.0
+
+---
+
+## [1.24.0] - 2026-10-21
+
+### Features
+- move settings to their own tab ([#103](https://github.com/YusDyr/luci-app-trafficctl/issues/103)) ([80435a8](https://github.com/YusDyr/luci-app-trafficctl/commit/80435a8b1a3f1b3cacf769afa85731e4ee75aa4a))
+  Safety net for #90, committed before the move it protects. The failure it
+  guards against is losing a section in the shuffle, which nothing else would
+  catch: the page still renders, the suite still passes, and the only symptom
+  is that one group of settings is no longer reachable from anywhere.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.23.1...v1.24.0
+
+---
+
+## [1.23.1] - 2026-10-20
+
+### Bug Fixes
+- publish translation apks under the release version ([#101](https://github.com/YusDyr/luci-app-trafficctl/issues/101)) ([f1d1a5a](https://github.com/YusDyr/luci-app-trafficctl/commit/f1d1a5aee7ddcbf408f8ab94fbbea26974d25957))
+  v1.23.0 shipped these two assets side by side:
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.23.0...v1.23.1
+
+---
+
+## [1.23.0] - 2026-10-19
+
+### Features
+- add Simplified Chinese i18n ([#99](https://github.com/YusDyr/luci-app-trafficctl/issues/99)) ([b3d3317](https://github.com/YusDyr/luci-app-trafficctl/commit/b3d33173f309c47a58d1ab0bb98725b1af2fb860))
+  Simplified Chinese translation (389 translated entries), a refreshed
+  message template, and the i18n rules that make both correct, from
+  @ntbowen in #73.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.22.0...v1.23.0
+
+---
+
+## [1.22.0] - 2026-10-16
+
+### Features
+- durable per-period traffic history with a History tab ([#92](https://github.com/YusDyr/luci-app-trafficctl/issues/92)) ([31a8d90](https://github.com/YusDyr/luci-app-trafficctl/commit/31a8d901ea4b68b1714570c5d14ae667cfebfe91))
+  Refs #89, #90. Keeps per-device totals across reboots and across devices
+  going offline, in one file per accounting period.
+
+### Bug Fixes
+- a superseded release run should stand down, not fail ([#97](https://github.com/YusDyr/luci-app-trafficctl/issues/97)) ([65a610f](https://github.com/YusDyr/luci-app-trafficctl/commit/65a610f6676fc77c60e89b8299560dec7ed98bdd))
+  Observed on release run 38275308881: #94's release refused to publish with
+  "main moved from 668e873 to c2c352a while this release was building",
+  because #93 and #95 were merged behind it. The guard was right to refuse --
+  the notes and version it computed no longer described the tip -- but red
+  was the wrong colour for it.
+- give software-counter offload its own banner text ([#96](https://github.com/YusDyr/luci-app-trafficctl/issues/96)) ([564862a](https://github.com/YusDyr/luci-app-trafficctl/commit/564862a5be875d0ba2452d898de7bb34f7878d01))
+  Closes #77.
+- stop the called workflows from sharing one concurrency group ([#98](https://github.com/YusDyr/luci-app-trafficctl/issues/98)) ([7cb7c07](https://github.com/YusDyr/luci-app-trafficctl/commit/7cb7c0781a60cb5378cfe6c1fceecad4de2ac172))
+  #92 was merged on 2026-10-12 and never released. Release run 38299207220
+  concluded "cancelled" with every check green except CI, which was cancelled
+  without running; publish needs ci, so it was skipped and no tag was cut.
+  The newest release is still v1.21.6 while main carries the history feature.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.21.6...v1.22.0
+
+---
+
+## [1.21.6] - 2026-10-12
+
+### Bug Fixes
+- keep the feed-install check off the release critical path ([#94](https://github.com/YusDyr/luci-app-trafficctl/issues/94)) ([668e873](https://github.com/YusDyr/luci-app-trafficctl/commit/668e873831c6212779b5a503ff5b1c3a9ace8831))
+  Regression from #91, measured on the release run that merge produced
+  (38086343117): 45m21s, against the ~32 minutes it was meant to improve on.
+- stop reporting success for limits NSS acceleration cannot enforce ([#93](https://github.com/YusDyr/luci-app-trafficctl/issues/93)) ([a87d40a](https://github.com/YusDyr/luci-app-trafficctl/commit/a87d40a9443f1899fa6ba18cdaad20e50ebf3f7d))
+  Refs #81. On Qualcomm NSS builds (ipq807x/ipq60xx with qca-nss-ecm) the
+  Enhanced Connection Manager installs flow rules into the NSS firmware
+  cores, and an accelerated flow never traverses the Linux network stack.
+  Both enforcement paths in this package are therefore inert there: the
+  nftables netdev policer never sees the packets and Linux HTB never queues
+  them. The reporter limited WiFi clients, nothing was limited, and the UI
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.21.5...v1.21.6
+
+---
+
+## [1.21.5] - 2026-10-10
+
+### Other
+- test the release build in the compatibility matrix instead of rebuilding it ([#91](https://github.com/YusDyr/luci-app-trafficctl/issues/91)) ([4cdf5bf](https://github.com/YusDyr/luci-app-trafficctl/commit/4cdf5bf86d46267563dc7517dd9ece07138ebe10))
+  The same package, for the same architecture, was built TWICE per release,
+  concurrently: 'Build the artifacts' (20m45s, real version) and
+  'Compatibility checks / Build packages' (30m52s, 0.0.0-test). The matrix
+  that consumes the result then finishes in 20 seconds, so the second build
+  WAS the critical path. Measured on run 36936909066.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.21.4...v1.21.5
+
+---
+
+## [1.21.4] - 2026-10-01
+
+### Other
+- build the release artifacts parallel to the checks, not after them ([#88](https://github.com/YusDyr/luci-app-trafficctl/issues/88)) ([4b4edc0](https://github.com/YusDyr/luci-app-trafficctl/commit/4b4edc00c8afba9cbade0d6ad5f7ffb9777455d3))
+  A release took 57 minutes for about 26 minutes of distinct work, because
+  the OpenWrt SDK build ran TWICE in sequence: once inside compat.yml as
+  `Build packages`, and again in the release job, which could only start
+  after `needs: [ci, compat]` was satisfied. Measured on run 36856850010 —
+  `Build packages` 30m47s, then the release job's SDK step 25m42s, while
+  every other step in that job together took 23 seconds.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.21.3...v1.21.4
+
+---
+
+## [1.21.3] - 2026-10-01
+
+### Other
+- cancel superseded runs on a pull request ([#87](https://github.com/YusDyr/luci-app-trafficctl/issues/87)) ([fb9d417](https://github.com/YusDyr/luci-app-trafficctl/commit/fb9d41730d1c0af15b3f8c35eb93fb673adb812f))
+  Neither ci.yml nor compat.yml declared a concurrency group, so every push
+  to a branch started another full OpenWrt compatibility matrix and the old
+  one kept running. On 2026-09-29 that put nine compat runs across three
+  branches in flight at once — four of them superseded commits on a single
+  branch — 153 jobs against the hosted concurrency limit, and runs stretched
+  to 34-55 minutes against a 24-27 minute uncontended baseline.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.21.2...v1.21.3
+
+---
+
+## [1.21.2] - 2026-10-01
+
+### Other
+- match persisted records by fixed string, not by regex ([#84](https://github.com/YusDyr/luci-app-trafficctl/issues/84)) ([ee51ffa](https://github.com/YusDyr/luci-app-trafficctl/commit/ee51ffae7c587445df32ff95fa6b1f9b1353bb31))
+  tctl_persist_save and tctl_persist_remove pick the record to replace by
+  building an awk pattern from the target and matching it with ~, which
+  makes the value a regular expression.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.21.1...v1.21.2
+
+---
+
+## [1.21.1] - 2026-10-01
+
+### Bug Fixes
+- stop two release runs from killing each other's changelog ([#86](https://github.com/YusDyr/luci-app-trafficctl/issues/86)) ([c601798](https://github.com/YusDyr/luci-app-trafficctl/commit/c601798551d1d99c30756ca49f46f04a4d9ef281))
+  The release job computes a version from "what is on main that the last
+  tag does not cover", then edits PKG_VERSION and CHANGELOG.md to say so.
+  Both were computed from the commit the run was triggered for, and the
+  edits were committed and only then rebased onto main.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.21.0...v1.21.1
+
+---
+
+## [1.21.0] - 2026-09-30
+
+### Features
+- set upload and download ceilings separately (UI) ([#83](https://github.com/YusDyr/luci-app-trafficctl/issues/83)) ([a8124e1](https://github.com/YusDyr/luci-app-trafficctl/commit/a8124e18317e61753320bf5aadf213577033e5ca))
+  The UI half of #66. The backend already takes two rates; this gives an
+  operator a way to enter the second one.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.20.1...v1.21.0
+
+---
+
+## [1.20.1] - 2026-09-30
+
+> This release also contains the asymmetric rate-limit backend below, which the
+> release job failed to record at the time: a second release run was in flight
+> and its bump commit conflicted on this file, so its notes were lost (#85). The
+> entry is restored by hand, and the version number stays 1.20.1 rather than
+> being rewritten — the tag is published and must not change meaning.
+
+### Features
+- independent download and upload rate limits ([#80](https://github.com/YusDyr/luci-app-trafficctl/issues/80)) ([920cfb2](https://github.com/YusDyr/luci-app-trafficctl/commit/920cfb2f))
+  The enforcement was already two-sided — the limiter polices download at
+  LAN egress and upload at LAN ingress as separate nftables rules on
+  separate hooks, and the shaper builds separate HTB classes on separate
+  devices. They were symmetric only because both halves took the same
+  number. This threads a second number through the scripts, the rpcd
+  surface, the persisted records and the reboot restore. An absent upload
+  rate keeps meaning "same as download" everywhere, so every record written
+  before this reads back unchanged.
+
+### Other
+- stop running every check two and three times ([#78](https://github.com/YusDyr/luci-app-trafficctl/issues/78)) ([9e43bdc](https://github.com/YusDyr/luci-app-trafficctl/commit/9e43bdc9dde250d6fdbb3c1143b8d945b19c243f))
+  The workflows nest: auto-release.yml calls ci.yml and compat.yml, and
+  ci.yml in turn calls shellcheck.yml, eslint.yml and tests.yml. All five
+  of those also carried their own push and pull_request triggers, so each
+  one ran standalone AND as a nested job.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.20.0...v1.20.1
+
+---
+
+## [1.20.0] - 2026-09-30
+
+### Features
+- ship translations in the release artifacts ([#76](https://github.com/YusDyr/luci-app-trafficctl/issues/76)) ([bac5cf7](https://github.com/YusDyr/luci-app-trafficctl/commit/bac5cf78da14216a328db34be614610e23cd5644))
+  Adding a .po to this repository had no effect on anything a user could
+  install from the Releases page. The OpenWrt feed build compiles po/ with
+  luci-base's po2lmo and emits one package per language; build-ipk.sh and
+  build-apk.sh, which produce every released artifact, copied root/ and
+  htdocs/ and nothing else. A release advertising a complete translation
+  would have been English end to end for anyone not building from a feed.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.19.1...v1.20.0
+
+---
+
+## [1.19.1] - 2026-09-30
+
+### Bug Fixes
+- label the software-counter offload mode in the status badge ([a22e3ad](https://github.com/YusDyr/luci-app-trafficctl/commit/a22e3ad777a3f8c3ce148ab6119bfd395efb65d7))
+  tctl_get_offload_mode splits software offload on the flowtable counter
+  flag and returns "software-counter" when it is set, but modeLabels in
+  status.js only knew the four older values. Anyone on that configuration
+  saw the badge fall through to its fallback and print a question mark
+  next to the raw mode string, which reads like a fault rather than the
+  healthy state it actually is.
+- render the Telegram limit preset buttons instead of NaN ([9f40296](https://github.com/YusDyr/luci-app-trafficctl/commit/9f40296fc1480e69b9083faf80edb46512c38603))
+  The keyboard preview built its limit buttons as
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.19.0...v1.19.1
+
+---
+
+## [1.19.0] - 2026-09-30
+
+### Features
+- aggregate rate limits per subnet / VLAN ([#71](https://github.com/YusDyr/luci-app-trafficctl/issues/71)) ([bea0475](https://github.com/YusDyr/luci-app-trafficctl/commit/bea0475473cab2288aec73c7814b5cee7c2f7d85))
+  Requested in #64 for Home/IoT/Guest VLANs. The engine already supported an
+  aggregate cap — trafficctl-ratelimit.sh takes a CIDR and a 'shared' mode that
+  puts the whole target in one bucket — but nothing in the dashboard exposed it
+  and neither README nor docs/API.md mentioned CIDR targets or the mode at all.
+  That omission is why the issue existed.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.18.2...v1.19.0
+
+---
+
+## [1.18.2] - 2026-09-29
+
+### Bug Fixes
+- enforce blocks and upload limits over IPv6 via MAC-keyed rules ([#70](https://github.com/YusDyr/luci-app-trafficctl/issues/70)) ([7f6f7e9](https://github.com/YusDyr/luci-app-trafficctl/commit/7f6f7e996ea67b90e8f597619939daf5acdf1f78))
+  Reported in #67 with a clean reproduction: 9.96 Mbit/s over IPv4 against a
+  10 Mbit/s limit, 151 Mbit/s over IPv6 to the same endpoint. The gap was
+  systemic — no enforcement path in the package matched IPv6 at all — and the
+  block case mattered most: a device reported as blocked had full, unmetered
+  IPv6 access, which unlike a limit that under-delivers is invisible until it
+  matters.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.18.1...v1.18.2
+
+---
+
+## [1.18.1] - 2026-09-29
+
+### Bug Fixes
+- Block WiFi reported success while the device stayed online ([#69](https://github.com/YusDyr/luci-app-trafficctl/issues/69)) ([30137d0](https://github.com/YusDyr/luci-app-trafficctl/commit/30137d0031d60cb2820b8a1976c8ec2222dcda2e))
+  Blocking a device's WiFi from the dashboard wrote the uci maclist, reported
+  success, and left the device online. Three defects behind one symptom, all
+  found on a live router:
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.18.0...v1.18.1
+
+---
+
+## [1.18.0] - 2026-09-27
+
+### Features
+- cut all internet access while keeping the LAN working ([#55](https://github.com/YusDyr/luci-app-trafficctl/issues/55)) ([#59](https://github.com/YusDyr/luci-app-trafficctl/issues/59)) ([9a95c61](https://github.com/YusDyr/luci-app-trafficctl/commit/9a95c61b5f8cc29c4b6de3faabae1ac4f256e7f4))
+  A single control that cuts internet access for every device while LAN keeps
+  working. Off by default, indefinite until switched off, and the engaged state
+  lives in tmpfs so a reboot always restores the internet; 'keep after reboot' is
+  its own opt-in rather than the global persist_rules flag, so nobody inherits a
+  persistent lockout from an unrelated decision.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.17.0...v1.18.0
+
+---
+
+## [1.17.0] - 2026-09-25
+
+### Features
+- wider Poll/Window choices and router-wide defaults for them ([#63](https://github.com/YusDyr/luci-app-trafficctl/issues/63)) ([b32b8d3](https://github.com/YusDyr/luci-app-trafficctl/commit/b32b8d3045abf42e233a4c1b330469664e98fb2d))
+  The Poll chips offered Off/1/2/5s and Window 5/15/30/60s, both hard-coded, so
+  there was no way to ask for the slower polling the request was about: on a
+  smaller router a 1s poll is a full conntrack read every second for numbers
+  nobody is watching that closely. Poll gains 10s and 30s, Window gains 2m and 5m.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.16.1...v1.17.0
+
+---
+
+## [1.16.1] - 2026-09-24
+
+### Bug Fixes
+- released packages left rpcd unaware of the plugin ([#62](https://github.com/YusDyr/luci-app-trafficctl/issues/62)) ([f55906a](https://github.com/YusDyr/luci-app-trafficctl/commit/f55906a12c4434348d15900bfe8642f199ac3bf6))
+  Installing a published package and opening the dashboard gave "RPC call to
+  luci.trafficctl/summary failed with error -32000: Object not found" until the
+  router was rebooted. rpcd only scans for plugins when it starts, and the
+  postinst never restarted it.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.16.0...v1.16.1
+
+---
+
+## [1.16.0] - 2026-09-19
+
+### Features
+- cumulative Bytes/TCP/UDP columns ([#26](https://github.com/YusDyr/luci-app-trafficctl/issues/26)) ([#60](https://github.com/YusDyr/luci-app-trafficctl/issues/60)) ([d26cc2c](https://github.com/YusDyr/luci-app-trafficctl/commit/d26cc2c637fad9e3d22f958a77efec4795c8a060))
+  The Bytes / TCP / UDP columns came straight from live conntrack, so they showed what CURRENTLY TRACKED flows had carried and collapsed the moment those flows aged out — the "2 bytes" in the report. They are now accumulated from deltas and persisted.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.15.0...v1.16.0
+
+---
+
+## [1.15.0] - 2026-09-19
+
+### Features
+- global bmon-style traffic overview ([#26](https://github.com/YusDyr/luci-app-trafficctl/issues/26) item 7) ([#58](https://github.com/YusDyr/luci-app-trafficctl/issues/58)) ([77bb925](https://github.com/YusDyr/luci-app-trafficctl/commit/77bb925d988d72a494d88331ff82bf58f8fdd11c))
+  Adds a global overview panel above the device table: an uplink throughput graph, role-badged per-interface rows with sparklines on a shared scale, and top talkers read from the speed map pollBytes() already maintains. No new collection — kernel counters plus data already on the page — and no timer of its own, so it inherits the Poll chip, document.hidden and the existing teardown.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.14.0...v1.15.0
+
+---
+
+## [1.14.0] - 2026-09-18
+
+### Features
+- optional default limit for devices seen for the first time ([#57](https://github.com/YusDyr/luci-app-trafficctl/issues/57)) ([12517f7](https://github.com/YusDyr/luci-app-trafficctl/commit/12517f70770ebba15d462896095847e5515d191c))
+  Closes the second half of #28. A new Settings section ("New Device
+  Defaults") applies a rate limit or a shape the first time a device
+  appears on the network. Off by default, and a rate of 0 makes it inert.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.13.6...v1.14.0
+
+---
+
+## [1.13.6] - 2026-09-18
+
+### Bug Fixes
+- byte counters truncated at 2 GiB by awk's 32-bit %d ([#56](https://github.com/YusDyr/luci-app-trafficctl/issues/56)) ([2a21938](https://github.com/YusDyr/luci-app-trafficctl/commit/2a219386ede2f733b1c4a8a5e156e268c6424c5c))
+  busybox awk formats %d through a 32-bit int, and what it does with a larger
+  value is undefined: OpenWrt's build saturates at 2147483647, Alpine's wraps to
+  -2147483648. Either way a device past 2 GiB stops reporting real numbers, and
+  on the saturating builds it does so silently -- the counter just stops moving.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.13.5...v1.13.6
+
+---
+
+## [1.13.5] - 2026-09-18
+
+### Bug Fixes
+- nft byte counters reported download and upload swapped ([#54](https://github.com/YusDyr/luci-app-trafficctl/issues/54)) ([2a2aa86](https://github.com/YusDyr/luci-app-trafficctl/commit/2a2aa8618b7bb28a4fab5e4381b3b59abdb33d98))
+  The nft counter backend keyed bytes_in by `ip saddr` and bytes_out by
+  `ip daddr`. In the forward hook, packets whose source is a LAN device are
+  that device's UPLOAD — so bytes_in accumulated upload and bytes_out
+  accumulated download, the exact opposite of every consumer:
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.13.4...v1.13.5
+
+---
+
+## [1.13.4] - 2026-09-09
+
+### Bug Fixes
+- stop release notes hanging on a commit that cites an issue ([613f5c3](https://github.com/YusDyr/luci-app-trafficctl/commit/613f5c34d63ff1221a7b4fc6a8b5a7952f69672c))
+  The auto-linking loop in the release-notes generator rewrites `subj` in
+  place and re-matches from the start:
+
+### Other
+- tell "snapshot feeds are down" apart from "our package is broken" ([895a09f](https://github.com/YusDyr/luci-app-trafficctl/commit/895a09f236d72d3f4869ad49b00fb37bb778a917))
+  The snapshot/x86-64 job has failed on every open PR for two days, blocking
+  #48, #49 and #50 — none of which could affect it (two touched only README,
+  one only an awk expression in a workflow). Inside the container apk fails
+  with "wget: exited with error 8" then "unable to select packages": OpenWrt's
+  rolling snapshot feeds are not serving. The same job passed on main on
+  2026-09-04, the image tag resolves fine, and reruns a day apart did not help.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.13.3...v1.13.4
+
+---
+
+## [1.13.3] - 2026-08-25
+
+### Bug Fixes
+- pass the section regex to awk through the environment ([53c7d8e](https://github.com/YusDyr/luci-app-trafficctl/commit/53c7d8e5044f00428df45ef9a25ef4a0279a1d79))
+  The release-notes generator matched commits with a pattern built as
+  "^${type_regex}(\\([^)]*\\))?:" and handed it to awk via -v. awk expands
+  escape sequences in a -v value, and \( is not one it recognises, so it stored
+  a plain ( and warned about both parens. The optional scope group
+  (\(...\))? thereby became a mandatory literal one, inverting the match in
+  both directions: every fix(scope): subject stopped matching, and fixup: and
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.13.2...v1.13.3
+
+---
+
+## [Unreleased]
+
+### Bug Fixes
+
+- **Release notes silently dropped every scoped commit.** `format_section()` passed its match pattern to awk with `-v`, where awk expands escape sequences in the value: `\(` became a plain `(`, turning the optional scope group into a mandatory literal one. Scoped types like `fix(shaper):` then matched nothing while `fixup:`/`fixes:` matched, so v1.13.2 shipped with no Bug Fixes section at all despite seven `fix(scope):` commits. The pattern now reaches awk through the environment, which is passed through verbatim. Only gawk is affected — the GitHub runners symlink `awk` to it — so the fault is invisible on a machine using mawk or BSD awk.
+
+---
+
+## [1.13.2] - 2026-08-25
+
+The release notes published for this version were incomplete: their Bug Fixes,
+Security, Documentation and Tests sections were lost to the generator bug
+recorded under Unreleased above. The full contents of the release follow.
+
+### Security
+
+- **The activity-log path could be pointed at any file.** `log_file` was written to UCI unvalidated and then used both as an append target and as a `tail`+`mv` rotation target, so a caller with the write ACL could read any root-owned file back through `activity_log` (which was in the **read** ACL) or empty one — `max_lines=1` rounded the rotation keep-count to zero. The path is now confined to `/tmp/trafficctl/` or `/var/log/`, `max_lines` to 20–100000, and `activity_log` is a write method.
+- **Private signing keys were exposed to a mutable third-party action.** All three workflows passed `APK_PRIVATE_KEY`/`USIGN_PRIVATE_KEY` into `openwrt/gh-action-sdk@main`; the action is now pinned to a commit SHA.
+- The Telegram bot token no longer appears in a command line (visible via `ps` to any local account) — the API URL is fed to curl on stdin, and `telegram_test` receives the token through the environment.
+- `/etc/config/trafficctl` holds the bot token and the metrics token and is now kept at mode 0600 after every commit, not only after saving Telegram settings.
+- `workflow_dispatch` inputs are no longer interpolated into `run:` blocks.
+
+### Bug Fixes
+
+- **Shaping a device could tear down every other device's shape.** The HTB classid was derived from the last two octets of the address, so `192.168.0.1` mapped onto the reserved root class `1:1` and shaping it deleted the root; `x.x.255.254` mapped onto the default class; and addresses from different subnets sharing their last two octets collided. Minors are now allocated and persisted, with pre-upgrade shapes still removable.
+- **The shaper destroyed a pre-existing QoS setup.** The first shape unconditionally replaced the root qdisc, wiping an SQM/cake configuration. A root qdisc that is not a recognised default is now left alone and shaping declines instead.
+- **Unblocking one device could unblock another.** Rule removal matched the comment as a substring, so `192.168.1.1` also matched `192.168.1.10`; the iptables state check had the same flaw and made `block` report "already blocked" without installing a rule. Comments are now matched in full and addresses as whole fields.
+- **Controls created in LuCI could not be removed from the Telegram bot** (and vice versa) while still reporting success: the rule comment was built from the caller's label. Comments are now derived from the target.
+- **Paused port ranges were only partly paused.** On the iptables path a range was truncated to its low port — `8000-8100` blocked only 8000 — while the UI showed the whole range as paused. Ranges are now passed as `lo:hi`.
+- Concurrent shape writes no longer lose an entry: the lock is an atomic `mkdir` rather than a test-then-create file, and a waiter no longer deletes a lock still held by another writer.
+- **Device aliases and shaping rules are no longer lost on a firmware upgrade** — `/etc/trafficctl` is now listed in `/lib/upgrade/keep.d/`, which default sysupgrade otherwise skips.
+- Undeclared runtime dependencies (`tc`, `iw`, `hostapd_cli`) are now declared, so shaping and WiFi deauthentication no longer fail silently on a clean install.
+- Hotplug scripts now ship executable.
+- Frontend: the graph popup and its 2-second timer are removed on view teardown instead of accumulating one per visit; per-device speed history is capped; activity-log lines are rendered as text; SVG gradient IDs are unique per graph; a failed WiFi block no longer leaves the button permanently disabled.
+- Releases: a scoped breaking change (`feat(scope)!:`) and a `BREAKING CHANGE:` footer are now detected, `refactor:`/`ci:` bump the patch version as documented, the tag is created after the rebase so it cannot be orphaned, the release is gated on the compatibility matrix, and a known-broken unsigned `.apk` is no longer published.
+- **A commit body merely mentioning `BREAKING CHANGE` no longer forces a major release.** The footer search was unanchored, so prose describing the footer counted as one; this branch's own history would have published v2.0.0 from `fix:`/`ci:`/`docs:`/`test:` commits. The footer is now recognised only at the start of a line followed by `:` or ` #`.
+
+### Documentation
+
+- `docs/API.md` documents all 31 rpcd methods (13 were missing) with their ACL level; added `CONTRIBUTING.md`, issue and PR templates.
+
+### Tests
+
+- Tests that redefined local copies of the functions they claimed to check now exercise the real scripts, and the previously untested rpcd backend, block/unblock, macfilter and metrics CGI are covered. Each bug above has a regression test verified to fail against the old behaviour.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.13.1...v1.13.2
+
+---
+
+## [1.13.1] - 2026-08-24
+
+### Bug Fixes
+- split speed into separate sortable DL and UL columns ([ecea06b](https://github.com/YusDyr/luci-app-trafficctl/commit/ecea06bc89420a457a56ad75960ab227c6032887))
+  After #27 merged, upload speed was shown twice: the DL Speed cell rendered a
+  combined "↓ x / ↑ y" pair, and the separate UL Speed column added in #34
+  rendered it again. Beyond the duplication, packing both into one cell means
+  neither direction can be sorted on its own — the column sorts by _speed only.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.13.0...v1.13.1
+
+---
+
+## [1.13.0] — 2026-08-24
+
+### Features
+
+- **Bidirectional rate limiting and shaping** — limits and shapers previously only affected download. Upload is now shaped via an IFB device fed from LAN-side ingress (a `match ip src` filter on the WAN side can't work post-NAT), and partial application is reported honestly instead of silently half-working. ([#27](https://github.com/YusDyr/luci-app-trafficctl/pull/27))
+- **Port Forwards tab** — view and manage DNAT rules from the app. ([#27](https://github.com/YusDyr/luci-app-trafficctl/pull/27))
+- **Routed-subnet monitoring** and improved device naming. ([#27](https://github.com/YusDyr/luci-app-trafficctl/pull/27))
+- **Optional netifyd DPI labels** — per-device application names when the Netify agent is installed. Entirely optional: not a package dependency, and inert when the agent or its socket is absent. ([#27](https://github.com/YusDyr/luci-app-trafficctl/pull/27))
+- **Subnet and whole-network limits** — rate-limit an entire subnet or the whole LAN from the UI, either per-device or as an aggregate. ([#27](https://github.com/YusDyr/luci-app-trafficctl/pull/27))
+- **Download and upload speed shown separately per device**, each in its own sortable column.
+- **Prometheus metrics endpoint** — `/cgi-bin/trafficctl-metrics`, disabled by default, with an optional shared token. ([#27](https://github.com/YusDyr/luci-app-trafficctl/pull/27))
+
+### Bug Fixes
+
+- Per-device speed monitoring no longer stops on kernels where dynamic nftables counter maps are unsupported.
+- The custom rate field no longer closes itself a few seconds after being opened.
+- Netify telemetry is read from the socket sink rather than the agent API socket, and the sample window now covers the aggregator's report interval.
+- Client-controlled device names are escaped in the summary JSON.
+
+Thanks to [@adeelahmad](https://github.com/adeelahmad) for this contribution.
+
+---
+
+## [1.12.1] — 2026-08-24
+
+### Bug Fixes
+
+- **UI controls readable on non-Bootstrap themes** — around 14 declarations bypassed the theme palette with literal colours. Tooltips were painted dark-on-white unconditionally (unreadable once the page went dark), text on accent-filled chips and buttons was hardcoded white (invisible on themes with a pale accent), the toggle knob was always white, and every shadow used a fixed black tuned for light backgrounds. All colour literals now live in the `:root`/dark blocks. ([#30](https://github.com/YusDyr/luci-app-trafficctl/issues/30))
+
+### Internal
+
+- Config is read via `config_load` / `config_get` with defaults instead of repeated `uci -q get` calls — the Telegram bot's `load_config()` alone dropped from 12 forks to 1, and it runs every 60s. Suggested by [@stangri](https://github.com/stangri). ([#29](https://github.com/YusDyr/luci-app-trafficctl/issues/29))
+
+---
+
+## [1.12.0] — 2026-08-24
+
+### Features
+
+- **Back/forward navigates between devices** — selecting a device now pushes a history entry, so mobile back gestures and mouse back buttons work. Option tweaks (columns, filters, intervals) still replace the entry, so the history stack doesn't fill with chip clicks. ([#26](https://github.com/YusDyr/luci-app-trafficctl/issues/26))
+
+---
+
+## [1.11.0] — 2026-08-24
+
+### Features
+
+- **WiFi allow-mode (whitelist) ACLs are supported** — the package now adapts to whichever `macfilter` policy each radio uses, instead of assuming a blacklist. ([#31](https://github.com/YusDyr/luci-app-trafficctl/issues/31))
+
+### Security
+
+- **Blocking a device no longer inverts a whitelist.** Blocking used to force `macfilter=deny` on every wifi-iface. On a router configured with `macfilter=allow`, that silently reinterpreted the administrator's curated allow-list as a block-list — letting in every device the whitelist existed to exclude, and banning every device it listed. The configured policy is now respected and never overwritten: on a deny radio blocking adds the MAC, on an allow radio it removes it.
+
+---
+
+## [1.10.1] — 2026-08-24
+
+### Bug Fixes
+
+- **The device view no longer freezes when a device is selected** — selecting a device stopped all polling, so speed, drop and backlog figures and the connection table stayed frozen until a manual refresh. This also made the per-device speed graph dead code, since the only thing driving it was skipped in that mode. ([#26](https://github.com/YusDyr/luci-app-trafficctl/issues/26))
+
+---
+
+## [1.10.0] — 2026-08-24
+
+### Features
+
+- **Per-device upload speed column** — upload was already being computed from `bytes_out` but never surfaced. ([#32](https://github.com/YusDyr/luci-app-trafficctl/issues/32))
+
+### Bug Fixes
+
+- **Live table updates work again** — six selectors still queried `td[data-…]` even though the tables became `<div class="td">` in the 1.6 LuCI-native conversion, so they matched nothing. Between full table rebuilds the speed, sparkline, drop-counter and backlog cells never refreshed, and clicking a sparkline never opened the speed-graph popup. ([#26](https://github.com/YusDyr/luci-app-trafficctl/issues/26))
+
+---
+
+## [1.9.0] — 2026-08-15
+
+### Features
+
+- **Egress interface per connection** — the connections table can show which WAN a connection actually uses, resolved from the conntrack fwmark via `ip route get <dst> mark <mark>`, so it honours mwan3's policy routing. Only populated where the router restores the connmark; left blank otherwise rather than showing a misleading main-table answer. Optional column, hidden by default. Thanks to [@the-e3n](https://github.com/the-e3n) for the diagnostics. ([#10](https://github.com/YusDyr/luci-app-trafficctl/issues/10))
+
+---
+
+## [1.8.1] — 2026-08-15
+
+### Bug Fixes
+
+- **Telegram bot responds to commands again on OpenWrt 25.12 / APK and snapshot** — newer `jsonfilter` returns an empty string for `jsonfilter -l '@.result'`, which left the update counter empty and made BusyBox ash spam `sh: out of range` while never processing `/start`, `/help`, `/devices` or any inline button. Reported and root-caused by [@lavatti](https://github.com/lavatti). ([#22](https://github.com/YusDyr/luci-app-trafficctl/issues/22))
+
+### CI
+
+- The install and upgrade tests now exercise a real `opkg install` instead of masking its failure with a manual tar extract — they had been validating tar extraction, not opkg.
+- The compat matrix is trimmed to x86-64. The other architectures were never actually running: OpenWrt publishes its rootfs container images for `linux/amd64` only, so those jobs failed `docker pull` and green-skipped. Since the package is `Architecture: all`, version coverage is what matters.
+- ESLint and ShellCheck now fail on warnings, and ShellCheck actually scans every script (its file list had been silently matching nothing for the init.d, rpcd and hotplug scripts).
+- `feature-build.yml` had a YAML error that made it fail on every run; fixed.
+- `docker pull` is retried, so a transient ghcr.io blip no longer reds the build.
+
+---
+
+## [1.8.0] — 2026-06-21
+
+### Features
+
+- **Devices on secondary bridges and VLANs are discovered** — device discovery enumerates every interface in the non-WAN firewall zones instead of assuming a single LAN. VPN/tunnel zones are excluded, so WireGuard/AmneziaWG peers aren't mistaken for LAN clients. ([#13](https://github.com/YusDyr/luci-app-trafficctl/issues/13))
+
+---
+
+## [1.7.1] — 2026-06-21
+
+### Performance
+
+- **The dashboard no longer re-scans firewall and conntrack state per device** — the summary rebuilt everything inside the per-device loop, re-reading all of `/proc/net/nf_conntrack` and re-dumping nft chains and tc classes for every client. With many devices that was dozens of heavy forks every few seconds, reported as the UI heavily loading the router. All shared state is now fetched once.
+- The Telegram bot scans for new devices periodically rather than on every poll iteration.
+
+### Bug Fixes
+
+- Temp files are removed via EXIT traps, so a script killed mid-run (which is exactly what rpcd does on a loaded router) no longer leaves scratch files filling tmpfs.
+
+---
+
+## [1.7.0] — 2026-06-04
+
+### Features
+
+- **Flow-offload awareness** — the settings panel shows the current offload mode with SW/HW toggles and explains the trade-offs. With hardware offload active the kernel stops syncing byte counts back to conntrack, so speed monitoring reads near zero; the UI now warns about this instead of showing frozen values.
+- **Batch reverse DNS** — all uncached addresses are resolved in one `network.rrdns.lookup` round-trip, removing the stuck "resolving…" state.
+- **Per-device speed graph** below the extended stats panel.
+
+### Bug Fixes
+
+- Dropped the `bind-dig` dependency: reverse DNS uses the built-in `rpcd-mod-rrdns` with a BusyBox `nslookup` fallback.
+- `build-ipk.sh` uses `--format ustar`, preventing macOS PaxHeader entries from corrupting installs on BusyBox tar.
+
+---
+
+## [1.6.6] — 2026-05-29
+
+### Bug Fixes
+
+- **Fix feed-based install** — `./scripts/feeds install -p trafficctl luci-app-trafficctl` was failing with `target pattern contains no '%'` because OpenWrt's `find -L … -mindepth 1` skipped the repository-root Makefile. The repository is now laid out with the package source in a `luci-app-trafficctl/` subdirectory, which is what OpenWrt's feed scanner expects. ([#7](https://github.com/YusDyr/luci-app-trafficctl/issues/7))
+- **Fix `/etc/config/trafficctl` clobbering on `opkg --force-reinstall`** — runtime state files (`shapes.json`, `telegram_known.json`) were listed as conffiles, which made opkg refuse to install on a fresh device. Conffiles now contain only `/etc/config/trafficctl`.
+- **Stop renaming `/etc/trafficmon/` to `/etc/trafficctl/`** — the previous migration code could collide with other `trafficmon`-named packages on the same router. Postinst no longer touches the old directory; existing installations should migrate manually if needed.
+
+### CI
+
+- New OpenWrt SDK feed-install regression test (3 SDK versions) reproduces the user-facing path that issue #7 was about.
+- New upgrade test (×2 SDK versions) installs the previously-released package, marks the config, installs the new build, and asserts the marker survives.
+- New dependency test (×3 versions) verifies that missing deps fail cleanly and that `opkg update` / `apk update` resolves them.
+- APK signing migrated from RSA to NIST P-256 (EC) keys — matches what `apk-tools v3` actually requires.
+- snapshot/x86-64 compat job now tolerates upstream `rpcd-mod-luci` / `rpcd-mod-ucode` post-install hook noise that doesn't affect our package.
+
+### Installation
+
+- Same install commands as v1.5.0+ — see the v1.5.0 entry below.
+
+---
+
+## [1.6.5] - 2026-05-28
+
+### Bug Fixes
+- move IPK preservation into build step itself ([ee93b8b](https://github.com/YusDyr/luci-app-trafficctl/commit/ee93b8b0d113ef9c7772f3fd261b78e7667511e7))
+  Separate step failed despite build-ipk succeeding (possible workspace
+  isolation between steps). Move cp to /tmp/ into the same run block.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.6.4...v1.6.5
+
+---
+
+## [1.6.4] - 2026-05-28
+
+> **Broken artifacts.** This release had install issues (missing `status.css`, invalid APK format, or a signing-key mismatch) and its assets have been deleted from GitHub. Use v1.6.5 or later. The entry is kept for history.
+
+### Bug Fixes
+- preserve IPK files across SDK Docker step ([fdfbc55](https://github.com/YusDyr/luci-app-trafficctl/commit/fdfbc55bb4d5fcdfde17c103675222da93fbe504))
+  SDK action may wipe the workspace dist/ directory. Save IPK files
+  to /tmp/ before SDK runs, restore them when collecting APK.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.6.3...v1.6.4
+
+---
+
+## [1.6.3] - 2026-05-28
+
+> **Broken artifacts.** This release had install issues (missing `status.css`, invalid APK format, or a signing-key mismatch) and its assets have been deleted from GitHub. Use v1.6.5 or later. The entry is kept for history.
+
+### Bug Fixes
+- mkdir dist before collecting APK in manual-release ([4853bac](https://github.com/YusDyr/luci-app-trafficctl/commit/4853bac041969a51c662501e462bb189a4b4fc98))
+  SDK action runs in Docker and may remove the dist/ directory
+  created by the earlier ipk build step. Ensure it exists.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.6.2...v1.6.3
+
+---
+
+## [1.6.2] - 2026-05-28
+
+> **Broken artifacts.** This release had install issues (missing `status.css`, invalid APK format, or a signing-key mismatch) and its assets have been deleted from GitHub. Use v1.6.5 or later. The entry is kept for history.
+
+### Bug Fixes
+- remove duplicate luci EXTRA_FEEDS from manual-release ([0b2653b](https://github.com/YusDyr/luci-app-trafficctl/commit/0b2653bdbe6b2f250355272e8ebf3b44b1198d30))
+  SDK 25.12.4 already includes luci in its default feeds.conf.
+  Adding it again via EXTRA_FEEDS causes "Duplicate feed name 'luci'"
+  error and exits with code 25 during feeds update.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.6.1...v1.6.2
+
+---
+
+## [1.6.1] - 2026-05-28
+
+> **Broken artifacts.** This release had install issues (missing `status.css`, invalid APK format, or a signing-key mismatch) and its assets have been deleted from GitHub. Use v1.6.5 or later. The entry is kept for history.
+
+### Bug Fixes
+- remove NO_DEFAULT_FEEDS from manual-release on main ([4212fdb](https://github.com/YusDyr/luci-app-trafficctl/commit/4212fdbf5077f4a00dfd39aa6a655699224ff69c))
+  workflow_dispatch always uses the YAML from the default branch,
+  regardless of the ref input. NO_DEFAULT_FEEDS: 1 excluded the
+  packages feed (lua.h headers), breaking SDK builds of luci deps.
+
+### Other
+- V=sc verbose for SDK in manual-release + asset hardlinks ([d96aa51](https://github.com/YusDyr/luci-app-trafficctl/commit/d96aa519c517d0591f48c85ebaa5c56316600e8c))
+  Brings the verbose-SDK and generic-named asset hardlink logic from
+  fix/install-and-feed-testing-v2 to main so workflow_dispatch can run
+  with the improvements while pull_request workflows are stuck.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.6.0...v1.6.1
+
+---
+
+## [1.6.0] - 2026-05-28
+
+> **Tagged but never released.** The v1.6.0 tag exists in git, but no GitHub Release was ever published for it and no artifacts were built.
+
+### Features
+- add manual-release workflow for rebuilding existing releases ([172fbc1](https://github.com/YusDyr/luci-app-trafficctl/commit/172fbc1cbb6d6167bc251b01ece9b6a759bfc938))
+  Cherry-picked early from #8 so we can rebuild v1.5.0's broken
+  artifacts without waiting for the full PR to merge — workflow_dispatch
+  requires the workflow file to exist on the default branch.
+
+### Other
+- remove generic-named asset symlinks from releases ([69924c4](https://github.com/YusDyr/luci-app-trafficctl/commit/69924c4dc610cbe54ad89488edad7998e189d076))
+  Only publish versioned filenames (e.g. _1.5.0-1_all.ipk).
+  GitHub's /releases/latest/download/ already resolves the latest
+  release, making _latest_ and unversioned copies redundant.
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.5.0...v1.6.0
+
+---
+
+## [1.5.0] — 2026-05-27
+
+### Features
+
+- **Auto-detect software flow offload** ([#5](https://github.com/YusDyr/luci-app-trafficctl/issues/5)) — the realtime monitor now detects whether the router is running OpenWrt's software flow offload and switches its measurement strategy accordingly:
+  - **No offload** — conntrack byte counters are accurate; we read them.
+  - **Offload active** — conntrack stops accounting for fast-path packets after the flow is offloaded. We instead read an nftables counter map attached at `forward priority -200` (before the offload hook), which captures every packet.
+  - The choice is re-evaluated on each refresh, so toggling flow offload in OpenWrt doesn't break the speed graph.
+
+### Installation
+
+- `opkg install` (OpenWrt 21.02 – 24.10):
+  ```sh
+  opkg install https://github.com/YusDyr/luci-app-trafficctl/releases/latest/download/luci-app-trafficctl.ipk
+  ```
+- `apk add` (OpenWrt 25.12+):
+  ```sh
+  apk add --allow-untrusted https://github.com/YusDyr/luci-app-trafficctl/releases/latest/download/luci-app-trafficctl.apk
+  ```
+- LuCI web UI: **System → Software → Upload Package**.
+
+---
+
+## [1.4.0] — 2026-05-27
+
+### Features
+
+- **APK package format for OpenWrt 25.12+** — releases now ship both `.ipk` (21.02 – 24.10) and `.apk` (25.12+, apk-tools v3) variants. APKs are built via the OpenWrt SDK so the resulting file uses the real APKv3 format (`ADBd` magic), not a fallback APKv2 archive that `apk-tools v3` refuses.
+- **Signed packages** — IPKs are signed with usign, APKs with a NIST P-256 EC key. Public keys live in `keys/`. Signatures are verified by `apk add` automatically and by `opkg` when `option check_signature` is set.
+- **Telegram bot test infrastructure** — added mock + integration + end-to-end test suites for the Telegram bot under `tests/`. All run on every PR.
+
+### Bug Fixes
+
+- **Don't shadow `awk`'s reserved word `load`** — variable rename in `trafficctl-summary.sh` keeps gawk happy on devices that use it instead of busybox awk.
+- Several CI debug-output and portability fixes for the Telegram E2E test runner.
+
+### CI
+
+- **Full compatibility matrix** — 52 combinations spanning OpenWrt 21.02 / 22.03 / 23.05 / 24.10.1 / 24.10.6 / 25.12.0 / 25.12.4 / snapshot × x86-64 / x86-generic / armsr / arm_a9 / arm_a15 / armvirt32 / mips_24kc / aarch64_cortex-a53.
+- Releases are now produced only by `feat:` / `fix:` / `perf:` commits — `ci:`, `refactor:`, `docs:` no longer trigger a version bump.
+- APK builds via `openwrt/gh-action-sdk` instead of a hand-rolled apk-tools wrapper.
+
+---
+
+## [1.3.1] - 2026-05-26
+
+> **Broken artifacts.** This release had install issues (missing `status.css`, invalid APK format, or a signing-key mismatch) and its assets have been deleted from GitHub. Use v1.6.5 or later. The entry is kept for history.
+
+### Other
+- replace release-please with auto-release on every merge ([52ffcf4](https://github.com/YusDyr/luci-app-trafficctl/commit/52ffcf4e0d190f550e31423b5cef21751c767183))
+  - Remove release-please workflow, config, and manifest
+  - Add auto-release.yml: on push to main, detect version bump from
+  conventional commits, create tag + GitHub Release + build IPK
+  - No manual steps needed — merge feat:/fix: to main = instant release
+  - Keep workflow_dispatch as manual fallback
+  - Update CLAUDE.md release documentation
+
+**Full Changelog**: https://github.com/YusDyr/luci-app-trafficctl/compare/v1.3.0...v1.3.1
+
+---
+
+## [1.3.0](https://github.com/YusDyr/luci-app-trafficctl/compare/v1.2.1...v1.3.0) (2026-05-26)
+
+
+### Features
+
+* redesign Telegram Bot settings with mode toggle, live preview, and template variables ([#2](https://github.com/YusDyr/luci-app-trafficctl/issues/2)) ([8d49873](https://github.com/YusDyr/luci-app-trafficctl/commit/8d498737de53db551648f254d005a1ecf0b5d4bc))
+
+
+### CI
+
+* add release-please for automated changelog and releases ([f1c9834](https://github.com/YusDyr/luci-app-trafficctl/commit/f1c9834b37a19ae091b5c6b993e1309a06c74709))
+
+## [1.2.1] — 2026-05-26
+
+### Bug Fixes
+
+- **Fix broken IPK format** — package was built with Debian `ar` format instead of OpenWrt's gzip-tar format; `opkg` rejected it with `Malformed package file` on all devices ([#1](https://github.com/YusDyr/luci-app-trafficctl/issues/1))
+- **Fix rpcd binary path** — binary was installed as `trafficctl` but rpcd expects `luci.trafficctl`
+- **Fix ShellCheck SC2086** — unquoted variable in `uci` call in `trafficctl-fw.sh`
+- **Fix ESLint no-redeclare** — duplicate `chipActiveStyle` declaration in `status.js`
+
+### CI
+
+- Per-test badges: ShellCheck, ESLint, Tests each have their own status badge
+- Release is blocked from publishing if any test fails
+- OpenWrt compatibility matrix: tested across 3 versions (21.02, 22.03, snapshot) × 4 architectures (x86-64, aarch64, arm\_a15, armvirt-32)
+- All CI jobs moved to GitHub-hosted runners
+
+### Installation
+
+- Install directly on the router without `scp`:
+  ```sh
+  opkg install https://github.com/YusDyr/luci-app-trafficctl/releases/latest/download/luci-app-trafficctl.ipk
+  ```
+- Install via LuCI web UI — **System → Software → Upload Package**
+- Stable download URLs: [`luci-app-trafficctl.ipk`](https://github.com/YusDyr/luci-app-trafficctl/releases/latest/download/luci-app-trafficctl.ipk), [`luci-app-trafficctl_all.ipk`](https://github.com/YusDyr/luci-app-trafficctl/releases/latest/download/luci-app-trafficctl_all.ipk), [`luci-app-trafficctl_latest_all.ipk`](https://github.com/YusDyr/luci-app-trafficctl/releases/latest/download/luci-app-trafficctl_latest_all.ipk)
+
+---
+
+## [1.2.0] — 2026-05-26
+
+### New Features
+
+- **Interactive speed graph popup** — hover any device's sparkline to see a full-size graph with download + upload dual lines, gradient fill, min/max band, rate limit overlay line, and an interactive crosshair showing precise values at any point in time. History starts from page load and is never lost.
+- **Recent devices quick-access bar** — selecting a device (via table click or search) adds it to a chip bar below the search field. Up to 6 recent devices persist across page reloads (localStorage). One-click switching between frequently monitored devices.
+- **Activity logging** — all mutable actions (blocks, rate limits, shapes, WiFi denials, config changes) are logged with timestamp, source IP, username, and trigger (LuCI / Telegram / CLI). Logs are viewable in the UI and optionally forwarded to syslog.
+- **Reboot persistence for blocks & rate limits** — new `persist_rules` option in Settings. When enabled, internet blocks and rate limits are saved to `/etc/trafficmon/rules.json` and automatically restored on boot alongside traffic shaping rules.
+- **New device detection** — instant notification when a new device joins the network. Detects via ARP, DHCP leases, and WiFi station list. DHCP hotplug trigger provides near-realtime alerts. Integrates with Telegram notifications.
+- **Per-device column toggles** — show/hide individual table columns (MAC, Speed, Conns, etc.) from the Connections table settings section.
+- **Settings panel collapsed by default** — cleaner look on page load; expand on demand.
+
+### Improvements
+
+- **WiFi blocking no longer restarts WiFi** — uses `hostapd_cli deny_acl` + `deauthenticate` to disconnect only the target client. Other WiFi clients stay connected with zero interruption.
+- **Speed display in bits (not bytes)** — sparkline and graph values now show Kbit/s and Mbit/s as expected for network speeds. Clean labels: no trailing ".0" for whole numbers (e.g., "10 Mbit/s" not "10.0 Mbit/s").
+- **Stable graph scale** — spike filter caps speed at 1 Gbit/s (link ceiling) to discard conntrack counter resets. Y-axis uses 98th percentile scaling so occasional spikes don't crush the useful range.
+- **Nice Y-axis values** — graph ticks are multiples of 100 or 500 Kbit/s (or 1/5/10 Mbit/s for faster links) with at least 5 gridlines for readability.
+- **Upload speed tracking** — graphs now show both download (solid blue) and upload (dashed green) simultaneously.
+- **Compact table headers** — limiter, drop, and queue columns use icon-only headers to save horizontal space.
+- **Sort by name** — device table can be sorted alphabetically by hostname.
+- **Sparkline rate limit line** — a subtle horizontal line on each sparkline shows the active speed limit for that device.
+- **Redesigned speed limit UI** — pill-style chip picker for rate presets + segmented toggle for shaper/limiter mode selection.
+
+### Bug Fixes
+
+- Fixed speed showing in bytes instead of bits.
+- Fixed graph popup not showing rate limit line for shaped devices (fallback to summary data).
+- Fixed initial page load sometimes showing blank table.
+- Fixed WiFi capture disconnecting all clients during screenshot automation.
+- Fixed rate limit removal failing to match by IP on some configurations.
+
+---
+
+## [1.1.0] — 2025-05-18
+
+### New Features
+
+- **Telegram bot** — remote control from your phone. Send `/devices` to see active devices with inline keyboard buttons for block, unblock, rate limit, shape, WiFi deny. Long polling — runs entirely on the router, no external server needed.
+- **New device notifications** — Telegram alerts when an unknown device joins your network.
+- **Bot configuration UI** — token, chat ID, notification toggles, and a "Test" button directly in LuCI Settings.
+
+### Improvements
+
+- CI pipeline with ShellCheck, ESLint, and automated tests.
+- CodeQL security scanning enabled.
+- System requirements documented (RAM, flash, CPU).
+
+---
+
+## [1.0.0] — 2025-05-10
+
+Initial release.
+
+- Real-time per-device traffic monitoring via conntrack.
+- Internet blocking (nftables / iptables auto-detection).
+- Rate limiting (nft policer with drop counters).
+- Traffic shaping (tc/HTB with fq_codel, persistent across reboots).
+- WiFi MAC filtering.
+- Interface detection (2.4G / 5G / 6G / LAN port).
+- Live speed sparklines with configurable poll interval.
+- Reverse DNS lookup for destination IPs.
+- Searchable device picker (command palette style).
+- Dark / light theme support.
+- OpenWrt 21.02–23.05 compatibility.

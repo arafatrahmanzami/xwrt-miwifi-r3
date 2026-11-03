@@ -1,0 +1,78 @@
+.ripple-js,
+.btn,
+.cbi-button,
+span.label,
+.rippleJS,
+span[data-indicator="poll-status"],
+li.cbi-tab-disabled,
+li.cbi-tab {
+    position: relative;
+    overflow: hidden;
+    mask-image: radial-gradient(circle, white, black);
+    -webkit-mask-image: -webkit-radial-gradient(circle, white, black);
+
+    &.fill::after {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        content: "";
+    }
+
+    &.fill {
+        border-radius: 1000000px;
+    }
+
+    .ripple {
+        position: absolute;
+        top: 0;
+        left: 0;
+        border-radius: 100%;
+        background: var(--comp-ripple-state-layer-color, currentColor);
+        opacity: 0.4;
+        width: 0;
+        height: 0;
+        -webkit-transition:
+            -webkit-transform 0.5s ease-out,
+            opacity 0.5s ease-out;
+        transition:
+            transform 0.5s ease-out,
+            opacity 0.5s ease-out;
+
+        -webkit-transform: scale(0);
+        transform: scale(0);
+
+        pointer-events: none;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+
+        &.held {
+            opacity: 0.1;
+            -webkit-transform: scale(1);
+            transform: scale(1);
+        }
+
+        &.done {
+            opacity: 0 !important;
+            -webkit-transform: scale(1);
+            transform: scale(1);
+        }
+    }
+}
+
+.drag-handle.ripple-js,
+.drag-handle.rippleJS,
+.drag-handle.btn,
+.drag-handle.cbi-button {
+    overflow: visible;
+    touch-action: none;
+    user-select: text;
+    mask-image: none;
+    -webkit-mask-image: none;
+    -webkit-user-drag: element;
+}
